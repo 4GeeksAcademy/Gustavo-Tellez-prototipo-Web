@@ -1,12 +1,12 @@
 # AgentHub: Especificación del panel de administración
 
-**Estado:** Especificación para un prototipo local.  
+**Estado:** Especificación de referencia para reconstruir el prototipo local AgentHub.  
 **Idioma de la interfaz:** Español.  
 **Fuente de datos:** Dataset ficticio hardcodeado; sin API, backend de producto ni persistencia.
 
 ## 1. Descripción general del proyecto
 
-AgentHub es una plataforma SaaS en la que empresas alquilan agentes de IA preconfigurados y amplían sus capacidades mediante Skills. Este documento define un panel administrativo interno para supervisar ingresos, usuarios, agentes, Skills, contrataciones y errores de ejecución. El entregable describe una futura interfaz; no implica que la aplicación, la API o el modelo de producción ya existan.
+AgentHub es una plataforma SaaS en la que empresas alquilan agentes de IA preconfigurados y amplían sus capacidades mediante Skills. Este documento define cómo reconstruir el panel administrativo local de demostración para supervisar ingresos, usuarios, agentes, Skills, contrataciones y errores. La implementación actual es un prototipo; no demuestra la existencia de una API o backend de producto en este repositorio.
 
 ## 2. Objetivos del proyecto
 
@@ -18,22 +18,23 @@ AgentHub es una plataforma SaaS en la que empresas alquilan agentes de IA precon
 
 ## 3. Alcance
 
-**Incluido:** panel de seis secciones, navegación, modo claro/oscuro, tablas, métricas, gráfico semanal, detalles en modales, confirmaciones, menús de acciones, Skills expandibles, toasts, estados vacíos y cambios locales en memoria.
+**Incluido:** panel de seis secciones, navegación, modo claro/oscuro, tablas, métricas, gráfico semanal, detalles en modales, confirmaciones, menús de acciones, Skills expandibles, toasts, estados vacíos, eliminaciones y resolución simuladas, y edición local del system prompt.
 
-**Excluido:** autenticación, permisos reales, API, conexión al backend existente, servicios externos de AgentHub, persistencia tras recargar, creación/edición de entidades, cobros reales, búsqueda avanzada, exportación, configuración de producción y telemetría real. Las acciones de eliminación y resolución son simulaciones locales.
+**Excluido:** autenticación, permisos reales, API, conexión al backend de AgentHub, servicios externos de producto, persistencia de datos tras recargar, creación de entidades y edición de sus campos salvo el system prompt, cobros reales, búsqueda avanzada, exportación, configuración de producción y telemetría real. Las acciones de edición, eliminación y resolución son simulaciones locales.
 
 ## 4. Rol y contexto del usuario
 
-El usuario principal es un administrador interno con acceso de solo lectura al conjunto de datos y permisos simulados para eliminar registros o resolver errores. Necesita comparar información con rapidez, distinguir estados por texto y color, y conservar el contexto de la tabla al inspeccionar detalles. El prototipo no implementa autenticación ni control de acceso; no debe presentar las acciones como operaciones reales del backend.
+El usuario principal es un administrador interno que consulta el conjunto de datos y puede simular la edición del system prompt, la eliminación de registros y la resolución de errores. Necesita comparar información con rapidez, distinguir estados por texto y color, y conservar el contexto de la tabla al inspeccionar detalles. El prototipo no implementa autenticación ni control de acceso; no debe presentar las acciones como operaciones reales del backend.
 
 ## 5. Análisis del repositorio
 
-- [server.py](../../server.py) contiene un servidor Flask que sirve `index.html` y archivos estáticos desde la raíz. Escucha en `0.0.0.0:3000` con `debug=True`; no constituye un backend de producto ni evidencia de despliegue de producción.
-- [README.es.md](../../README.es.md) describe la plantilla HTML/CSS y el inicio de Flask. Recomienda Tailwind CSS v4 por CDN como opción.
-- [learn.json](../../learn.json) declara HTML, CSS y JavaScript, pero esa metadata no prueba que exista una interfaz implementada.
-- No se observan componentes de AgentHub, manifiestos de dependencias, configuración de build, API ni persistencia.
+- [server.py](../../server.py) sirve archivos estáticos con Flask en `0.0.0.0:3000`, con `debug=True`. Es únicamente un servidor de desarrollo.
+- La raíz contiene las seis páginas HTML, `app.css`, `data.js`, `utils.js`, `components.js` y `main.js`. El código de interfaz y los datos de ejemplo existen; no hay manifiesto de paquetes, build, API ni persistencia de producto.
+- [DESIGN.md](../../DESIGN.md) y `stitch-reference/` contienen referencias visuales; no son las páginas activas. La especificación prevalece sobre esas referencias cuando sus datos, colores o controles difieren.
+- Cada página carga `https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4`, enlaza `app.css` y carga con `defer`, en este orden, `data.js`, `utils.js`, `components.js` y `main.js`. Tailwind se carga exclusivamente por CDN; el CSS local y estilos inline puntuales están permitidos.
+- JavaScript es vanilla, sin React, Vue, jQuery, compilador ni gestor de paquetes. Flask requiere Python y Flask instalados para ejecutar `python3 server.py`; no es un backend de AgentHub.
 
-La futura implementación debe reutilizar la base disponible. HTML/CSS/JavaScript son la recomendación más conservadora por la intención documentada de la plantilla; no se debe asumir React, TypeScript, Node u otro framework. Tailwind v4 no está verificado como instalado; se recomienda como mecanismo de estilos por su mención en el README y porque el requisito exige utilidades `dark:`. Si se usa, documentar la carga por CDN y su requisito de red. Flask solo serviría la interfaz estática.
+Para reconstruir desde cero, crear en la raíz: `index.html`, `usuarios.html`, `agentes.html`, `skills.html`, `contrataciones.html`, `errores.html`, `app.css`, `data.js`, `utils.js`, `components.js` y `main.js`. En cada HTML establecer `lang="es"`, metadatos de viewport, título de sección, un `body` con `data-page`, un contenedor `#app` y el orden de carga anterior. `main.js` genera el shell y la vista identificada por `data-page`; `data.js` contiene fixtures, `utils.js` las reglas, `components.js` los controles compartidos y `app.css` el sistema visual. No reutilizar el mapa de utilidades experimental inactivo de la implementación actual.
 
 ## 6. Arquitectura de información
 
@@ -46,12 +47,12 @@ Navegación principal, en este orden:
 5. Contrataciones
 6. Log de errores
 
-Cada sección tiene una ruta/hash o estado de vista estable, título único, contenido principal y acción contextual cuando aplique. Cambiar sección actualiza el indicador activo y el título de la topbar sin abrir una vista duplicada. El prototipo puede resolver la navegación con JavaScript local; no necesita un router externo.
+Las rutas son respectivamente `index.html`, `usuarios.html`, `agentes.html`, `skills.html`, `contrataciones.html` y `errores.html`; sus valores `data-page` son `dashboard`, `usuarios`, `agentes`, `skills`, `contrataciones` y `errores`. Usar enlaces normales entre documentos, sin router ni SPA. Cada página muestra su título en la topbar y marca el enlace activo con `aria-current="page"`. El traspaso temporal del estado se define en la sección 17.
 
 ## 7. Layout general
 
-- **Escritorio:** sidebar persistente de aproximadamente 240 px; área principal flexible con topbar de 64 px y contenido con máximo de lectura amplio. El contenido tiene márgenes de 24–32 px.
-- **Sidebar:** marca AgentHub, seis enlaces con icono y texto, estado activo claramente visible y control de colapso opcional solo si mantiene etiquetas accesibles.
+- **Escritorio:** sidebar persistente de 240 px; área principal flexible con topbar de 56 px y contenido de hasta 1600 px, con 24 px de separación lateral.
+- **Sidebar:** marca AgentHub, seis enlaces con identificador e información textual, estado activo claramente visible y nota «Prototipo local»; no incluir colapso de escritorio.
 - **Topbar:** breadcrumb o nombre de sección, título/contexto actual y toggle claro/oscuro. No duplica navegación principal.
 - **Contenido:** encabezado de página, descripción breve si aporta contexto, controles y contenido. Las tablas ocupan el ancho disponible; se evitan tarjetas anidadas o decoración sin función.
 - **Móvil:** sidebar sustituida por navegación tipo drawer activada con botón accesible; al abrir, el drawer cubre el contenido con backdrop y se cierra al elegir sección, pulsar Escape o hacer clic fuera. Topbar compacta y tablas transformadas en filas apiladas o contenedor con desplazamiento horizontal indicado.
@@ -60,10 +61,10 @@ Cada sección tiene una ruta/hash o estado de vista estable, título único, con
 
 - **Dirección visual:** SaaS administrativo sobrio, compacto y fácil de escanear; sin ilustraciones decorativas ni gradientes de marketing.
 - **Tipografía:** sans serif legible disponible localmente; jerarquía clara: título de página 24–28 px, subtítulos 16–18 px, texto/tablas 14–16 px, metadatos nunca menores de 12 px. Evitar tipografía condensada en datos.
-- **Color:** fondos neutrales; texto de alto contraste; un acento verde azulado para acciones/selección; verde para éxito/activo, ámbar para advertencia, rojo para error/crítico, azul neutro para información. No depender solo del color.
+- **Color:** priorizar los tokens del bloque YAML de `DESIGN.md` para oscuro, como se acordó frente a los valores distintos de su texto narrativo. Usar el CSS local para ambos temas: oscuro `#0b1326` fondo, `#171f33` superficie, `#131b2e` sidebar, `#3d4947` borde, `#dae2fd` texto y `#6bd8cb` acento; claro `#f8fafc`, `#ffffff`, `#f1f5f9`, `#d3dce5`, `#17212b` y `#087f75` respectivamente. Verde indica éxito, ámbar advertencia, rojo error/crítico y azul información; acompañar siempre con texto.
 - **Tema claro:** fondo general gris muy claro, superficies blancas, bordes grises suaves y texto grafito.
-- **Tema oscuro:** fondo grafito, superficies gris oscuro diferenciadas, bordes visibles, texto claro y colores semánticos aclarados para contraste.
-- **Tailwind:** aplicar variantes `dark:` a fondos, texto, bordes, estados de hover/focus y controles; activar el tema mediante clase `dark` en la raíz y persistir la preferencia solo durante la sesión/local storage si el navegador lo permite. Al inicio, respetar preferencia guardada; en ausencia de elección, respetar `prefers-color-scheme`.
+- **Tema oscuro:** fondo y superficies azul pizarra oscuro con los valores fijados arriba, bordes visibles, texto claro y colores semánticos aclarados para contraste.
+- **Temas y estilos:** `app.css` define variables en `:root` y `html.dark`; Tailwind v4 se carga por CDN y puede complementar la hoja con utilidades y `dark:`. Se permite CSS externo local y `style` inline para alturas del gráfico y posición del menú. Activar `dark` en la raíz, guardar elección en `localStorage` bajo `agenthub-theme` y, si no hay elección, usar `prefers-color-scheme`.
 - **Espaciado:** escala consistente basada en múltiplos de 4 px; 16–24 px entre bloques y 8–12 px en controles relacionados.
 - **Cards y superficies:** radio máximo 8 px, borde sutil y sombra solo cuando ayude a separar capas; las secciones de página no se envuelven en cards decorativas.
 - **Tablas:** encabezados persistentes cuando haya scroll largo; alineación consistente; números monetarios alineados a la derecha; filas con hover/focus discretos; acciones al final.
@@ -76,18 +77,18 @@ Cada sección tiene una ruta/hash o estado de vista estable, título único, con
 
 ### Métricas
 
-Mostrar cuatro tarjetas en una cuadrícula que se adapte a 4 columnas en escritorio, 2 en tablet y 1 en móvil:
+Mostrar cuatro tarjetas en una cuadrícula de 4 columnas por encima de 800 px, 2 entre 521 y 800 px y 1 hasta 520 px:
 
 1. **Ingresos del mes:** suma de `amountPaid` de pagos con fecha dentro del mes calendario actual. Mostrar moneda y etiqueta del periodo. No incluir pagos pendientes ni anulados.
 2. **Ingresos perdidos por descuentos:** suma de `discountAmount` de esos mismos pagos. Es la diferencia entre subtotal de lista y total antes de impuestos; indicar explícitamente que es descuento concedido.
 3. **Agentes activos:** cantidad de agentes cuyo estado derivado sea `active`, en todos los clientes. Excluir `inactive`, `failing` y agentes eliminados.
-4. **Agentes fallando:** cantidad de agentes cuyo estado derivado sea `failing`, no cantidad de logs. Mostrar como problema operativo y enlazar a Log de errores con filtro local por esos agentes, si la navegación admite filtros.
+4. **Agentes fallando:** cantidad de agentes cuyo estado derivado sea `failing`, no cantidad de logs. Mostrar como problema operativo; proporcionar debajo del gráfico un enlace general a Log de errores, sin filtro de agente implícito.
 
-Para ingresos, usar el código de moneda del dataset (USD) y formato local `es`; no mezclar monedas. Si no existen pagos este mes, mostrar `$0.00` y no un dato ficticio vacío.
+Para ingresos, usar el código de moneda del dataset (USD) y `Intl.NumberFormat('es', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 })`; no mezclar monedas. Si no existen pagos este mes, mostrar cero con ese formato y no un dato ficticio vacío.
 
 ### Actividad semanal
 
-Debajo de las métricas, mostrar un gráfico de línea o barras de siete días consecutivos, incluyendo el día actual. Serie: importe pagado por día; tooltip/alternativa accesible muestra fecha, importe y número de pagos. El eje temporal debe estar en orden y usar una escala común. Si no hay datos, mostrar estado vacío con siete valores cero. No presentar eventos inventados como actividad de agentes.
+Debajo de las métricas, mostrar un gráfico de barras de siete días consecutivos, incluyendo el día actual. Serie: importe pagado por día; alternativa accesible muestra fecha, importe y número de pagos. El eje temporal debe estar en orden y usar una escala común. Si no hay datos, mostrar siete valores cero. No presentar eventos inventados como actividad de agentes. Debajo incluir tabla de hasta cuatro pagos completados recientes con cliente, contrato, agente, fecha e importe; esta tabla es de resumen y sus filas no necesitan dropdown. Sus enlaces llevan a Contrataciones y Log de errores.
 
 ## 10. Especificación de la gestión de usuarios
 
@@ -113,7 +114,7 @@ Columnas: nombre, propietario, estado, Skills, acciones. Estados visibles: Activ
 
 ### Configurar y eliminar
 
-El menú `⋮` contiene «Configurar» y «Eliminar». Configurar abre modal con nombre, propietario, estado y system prompt completo en un bloque legible de texto preformateado, seleccionable y con scroll interno. No editar el prompt en este alcance. Modal cierra como el modal de usuario.
+El menú `⋮` contiene «Configurar» y «Eliminar». Configurar abre modal con nombre, propietario, estado y system prompt completo en un textarea editable, seleccionable y con scroll interno. «Guardar cambios» conserva el prompt en el estado local en memoria; rechaza valores vacíos, muestra feedback y no llama a una API. Modal cierra como el modal de usuario.
 
 Eliminar requiere confirmación con nombre del agente. Confirmar lo marca eliminado localmente, lo oculta de la tabla y lo excluye de las métricas. No borrar contratos ni errores; historial conserva snapshot/nombre del agente. Mostrar toast con deshacer por 5 segundos. Si tiene contrato activo, advertir que el registro histórico se conserva; la simulación no cancela ni modifica el contrato.
 
@@ -135,7 +136,7 @@ Eliminar requiere confirmación. Si una Skill está asociada a agente o contrato
 
 ### Tabla
 
-Mostrar cliente, agente, Skills contratadas, inicio, fin, total pagado y acciones. Para contratos sin fecha final mostrar «Sin fecha de finalización»; para Skills numerosas mostrar cantidad y expandir/tooltip accesible. Acciones: «Ver detalle».
+Mostrar cliente, agente, Skills contratadas, inicio, fin, estado, total pagado y acciones. Para contratos sin fecha final mostrar «Sin fecha de finalización»; representar las Skills como etiquetas. Cada fila usa un menú `⋮` con «Ver detalle».
 
 ### Modal de detalle
 
@@ -157,7 +158,7 @@ El detalle muestra cada línea, subtotal, descuento, impuesto si corresponde y t
 
 Tabla: fecha/hora localizable, agente, tipo, descripción breve, gravedad, estado de resolución y acciones. Categorías: Crítico (rojo oscuro), Error (rojo), Advertencia (ámbar), Información (azul neutro). Mostrar texto de categoría en badge. Orden inicial más reciente primero.
 
-Menú `⋮`: «Ver detalle» y «Marcar como resuelto»; la segunda opción se deshabilita/cambia a «Resuelto» para registros ya resueltos. El modal contiene ID, timestamp con zona horaria, agente, tipo, categoría, descripción completa, contexto relevante, stack trace íntegro en bloque monoespaciado con scroll, estado y hora de resolución si existe.
+Menú `⋮`: «Ver detalle» y «Marcar como resuelto»; la segunda opción se deshabilita y cambia a «Ya resuelto» para registros resueltos. Añadir dos selectores locales: gravedad (`all`, `critical`, `error`, `warning`, `info`) y resolución (`all`, `unresolved`, `resolved`), inicialmente en «Todos»; ambos filtros se combinan. El modal contiene ID, timestamp con zona horaria, agente, tipo, categoría, descripción completa, contexto relevante, stack trace íntegro en bloque monoespaciado con scroll, estado y hora de resolución si existe.
 
 «Marcar como resuelto» actualiza estado en memoria, añade `resolvedAt`, cambia badge y ofrece toast de éxito. Mantiene descripción y stack trace. No elimina el registro. Recalcular estado del agente con la regla de la sección 11. Si ya fue resuelto, acción idempotente: no duplicar cambios ni toast de error. Al recargar se restauran datos iniciales.
 
@@ -165,9 +166,9 @@ Menú `⋮`: «Ver detalle» y «Marcar como resuelto»; la segunda opción se d
 
 Usar identificadores estables y referencias por ID. Fechas ISO 8601; timestamps con zona UTC almacenada y formateada a hora local. Importes como decimal monetario (no aritmética binaria de coma flotante para redondeos); moneda `USD`. Todos los objetos seed son ficticios.
 
-- **User:** `id`, `name`, `email`, `organization`, `plan`, `status`, `createdAt`, `country`, `deletedAt?`. Un usuario puede ser propietario de agentes y cliente de contratos.
+- **User:** `id`, `name`, `email`, `organization`, `plan`, `status`, `createdAt`, `country`, `role`, `deletedAt?`. Un usuario puede ser propietario de agentes y cliente de contratos.
 - **Agent:** `id`, `name`, `ownerUserId`, `enabled`, `systemPrompt`, `skillIds[]`, `createdAt`, `deletedAt?`. Tiene un propietario, varias Skills y cero o más logs/contratos. Estado derivado conforme a la sección 11.
-- **Skill:** `id`, `name`, `shortDescription`, `description`, `category`, `version`, `listPrice`, `currency`, `archivedAt?`. Puede asociarse a muchos agentes y contratos. `listPrice` es el precio de referencia actual, no reescribe snapshots históricos.
+- **Skill:** `id`, `name`, `shortDescription`, `description`, `limitations`, `category`, `version`, `listPrice`, `currency`, `archivedAt?`. Puede asociarse a muchos agentes y contratos. `listPrice` es el precio de referencia actual, no reescribe snapshots históricos.
 - **Contract:** `id`, `clientUserId`, `agentId`, `status`, `startDate`, `endDate?`, `billingPeriod`, `currency`, `basePrice`, `skillLines[{skillId, nameSnapshot, price}]`, `discountAmount`, `taxAmount`, `totalPaid`, `payments[]`. Un contrato relaciona un cliente con un agente. Cada pago tiene `id`, `paidAt`, `subtotal`, `discountAmount`, `taxAmount`, `amountPaid`, `status`; solo pagos `paid` se agregan en Dashboard.
 - **ErrorLog:** `id`, `agentId`, `occurredAt`, `type`, `severity`, `shortDescription`, `description`, `stackTrace`, `context`, `status`, `resolvedAt?`. Un log pertenece a un agente; resolverlo no elimina el vínculo.
 
@@ -177,9 +178,58 @@ Usar identificadores estables y referencias por ID. Fechas ISO 8601; timestamps 
 - Los valores de estado pertenecen a los enums documentados. Un agente activo/fallando debe estar habilitado; inactivo debe estar deshabilitado.
 - Un agente fallando tiene al menos un Error/Crítico sin resolver. Ningún agente activo tiene Error/Crítico sin resolver.
 - Precio de Skill en contrato es snapshot, no se recalcula con el catálogo actual. El total de contrato y cada pago deben cuadrar con su desglose.
-- Incluir como mínimo 4 usuarios (al menos uno por plan y varios estados), 5 agentes (con los tres estados), 4 Skills (web, documentos, calendario y datos), 4 contratos (activos e históricos; descuento y sin descuento; al menos un contrato con varias Skills) y 5 logs (todas las severidades, varios resueltos y al menos un error no resuelto vinculado a agente fallando).
+- Incluir como mínimo 5 usuarios (los tres planes y estados), 5 agentes (con los tres estados), 4 Skills (web, documentos, calendario y datos), 4 contratos (activos e históricos; descuento y sin descuento; al menos un contrato con varias Skills) y 6 logs (todas las severidades, varios resueltos y al menos un error no resuelto vinculado a agente fallando).
 - Incluir pagos con fechas en la semana actual y en el mes actual para poder visualizar métricas; no codificar fechas que contradigan la fecha del sistema sin etiquetar el periodo fixture. Crear fechas seed relativas al día actual para mantener útiles las métricas.
 - Eliminar es soft delete/archivo en estado local. No usar cascada destructiva: contratos y logs conservan snapshots/referencias visibles y muestran «Registro eliminado/archivado» si el elemento relacionado ya no figura en su catálogo.
+
+### Dataset inicial reproducible
+
+Usar los siguientes IDs, nombres y relaciones. Los emails son ficticios bajo `example.test`; asignar al usuario su nombre, organización, país, rol y fecha de alta ficticios. Los desplazamientos de días se cuentan desde la fecha local actual: fechas a las 12:00 locales y timestamps con hora local convertida a ISO UTC.
+
+| Usuario | Nombre | Email | Organización | Plan / estado | País / rol | Alta, días relativos |
+|---|---|---|---|---|---|---:|
+| `usr-nova` | Carlos Mendoza | `carlos.mendoza@example.test` | NovaTech Solutions | Enterprise / `active` | España / Director de Operaciones | -420 |
+| `usr-data` | Elena Ruiz | `elena.ruiz@example.test` | DataPulse Analytics | Pro / `invited` | México / Administradora | -260 |
+| `usr-krypton` | Andrés Valdés | `andres.valdes@example.test` | Krypton Health AI | Enterprise / `active` | Chile / Responsable de Tecnología | -180 |
+| `usr-vanguard` | Mariana Soria | `mariana.soria@example.test` | Vanguard FinTech | Starter / `suspended` | Argentina / Analista de Cumplimiento | -90 |
+| `usr-summit` | Lucía Herrera | `lucia.herrera@example.test` | Summit Works | Starter / `active` | Colombia / Coordinadora de Operaciones | -35 |
+
+| Skill | Nombre | Categoría | Versión | Precio USD |
+|---|---|---|---|---:|
+| `sk-web` | Navegación web | Exploración | 2.4 | 120.00 |
+| `sk-docs` | Análisis de documentos | Procesamiento | 1.8 | 180.00 |
+| `sk-calendar` | Gestión de calendarios | Productividad | 3.1 | 90.00 |
+| `sk-data` | Procesamiento de datos | Procesamiento | 2.0 | 150.00 |
+
+| Agente | Nombre | Propietario | Habilitado | Skills | Alta, días relativos |
+|---|---|---|---|---|---:|
+| `agt-sentinel` | SentinelBot Pro | `usr-nova` | Sí | `sk-web`, `sk-docs` | -120 |
+| `agt-scraper` | DataScraper Alpha | `usr-data` | Sí | `sk-web`, `sk-data` | -100 |
+| `agt-calendar` | CalendarGenius | `usr-krypton` | Sí | `sk-calendar`, `sk-docs` | -70 |
+| `agt-reviewer` | Compliance Reviewer | `usr-vanguard` | No | `sk-docs`, `sk-data` | -60 |
+| `agt-support` | SupportGenie | `usr-nova` | Sí | `sk-docs`, `sk-calendar` | -45 |
+
+Cada agente tiene un system prompt ficticio no vacío, en español, que describe su función sin autorizar acciones externas. Cada Skill tiene descripción breve, descripción completa y limitaciones ficticias coherentes con su nombre.
+
+| Contrato | Cliente / agente | Estado | Inicio / fin, días relativos | Base | Skills snapshot | Descuento | Impuesto | Pago |
+|---|---|---|---|---:|---|---:|---:|---:|
+| `CTR-2026-101` | `usr-nova` / `agt-sentinel` | `active` | -12 / sin fin | 1200 | web 120, documentos 180 | 150 | 0 | 1350 |
+| `CTR-2026-087` | `usr-data` / `agt-scraper` | `completed` | -42 / -13 | 950 | web 120 | 0 | 0 | 1070 |
+| `CTR-2026-112` | `usr-krypton` / `agt-calendar` | `active` | -8 / sin fin | 2100 | documentos 180, calendario 90 | 237 | 0 | 2133 |
+| `CTR-2026-063` | `usr-vanguard` / `agt-reviewer` | `cancelled` | -35 / -28 | 800 | datos 150 | 0 | 0 | 950 |
+
+Todos los importes son USD y cada contrato tiene un pago `paid`, con desglose igual al contractual. Las fechas relativas de pago son respectivamente -1, -5, -3 y -29 días. El contrato cancelado conserva su pago histórico; no simular un reembolso. Los ingresos mensuales dependen del mes local y pueden variar al cruzar el primer día del mes.
+
+| Log | Agente | Tipo | Gravedad | Estado | Día relativo |
+|---|---|---|---|---|---:|
+| `ERR-4101` | `agt-support` | ConnectionTimeout | `critical` | `unresolved` | -1 |
+| `ERR-4102` | `agt-scraper` | RateLimitExceeded | `error` | `unresolved` | -2 |
+| `ERR-4098` | `agt-calendar` | CalendarConflict | `warning` | `unresolved` | -3 |
+| `ERR-4070` | `agt-sentinel` | OptionalFieldMissing | `info` | `resolved` | -6 |
+| `ERR-4022` | `agt-reviewer` | DisabledAgentNotice | `error` | `resolved` | -20 |
+| `ERR-4008` | `agt-sentinel` | OptionalMetadataNotice | `warning` | `unresolved` | -12 |
+
+Cada log incluye descripción breve y completa, contexto y stack trace ficticio no vacío; los resueltos incluyen `resolvedAt`. Inicialmente SentinelBot y CalendarGenius están activos, DataScraper y SupportGenie fallando, y Compliance Reviewer inactivo.
 
 ## 16. Arquitectura de componentes
 
@@ -209,6 +259,7 @@ La lógica de datos/estado debe separarse de la presentación para que las métr
 - **Eliminación simulada:** marcar eliminado/archivado, actualizar tabla y conteos, preservar referencias, ofrecer Deshacer durante 5 s; si se deshace, restaurar exactamente el registro y sus conteos. Pasado el plazo, no hay mecanismo de restauración. Los datos se reinician al recargar.
 - **Skills expandibles:** contraer inicialmente, anunciar número de Skills, activar con teclado y no perder selección/foco al animar.
 - **Tema:** toggle alterna inmediatamente, actualiza clase raíz, mantiene contraste, persiste preferencia local cuando sea posible; seguir preferencia del sistema si no hay selección previa.
+- **Navegación entre documentos:** mantener el estado de entidades en memoria; al hacer clic normal, sin modificadores, en un enlace interno hacia otra sección, serializarlo en `sessionStorage` bajo `agenthub-navigation-state`, junto con la ruta destino y la hora. Al iniciar el documento destino, consumir y borrar la entrada antes de renderizar; aceptarla solo si coincide la ruta y tiene menos de 15 segundos. Una carga directa o recarga sin transferencia restaura fixtures. Si el almacenamiento falla, continuar con fixtures sin bloquear navegación. La preferencia de tema se guarda separadamente en `localStorage` y sobrevive a recargas.
 - **Resolución de error:** marcar resuelto una vez, registrar `resolvedAt`, refrescar estado de agente, permitir ver detalle posterior y dar toast; no borrar ni modificar traza.
 - **Feedback:** toast de éxito/error con texto específico; duración 5 s, cierre manual, acción Deshacer cuando corresponda. Anunciar con región `aria-live`; no tapar controles ni contenido crítico.
 - **Estados vacíos:** mensajes distintos para catálogo sin registros, filtro sin resultados (si se implementa filtro), y tabla vacía tras eliminación; permitir quitar filtro/restaurar elemento cuando aplique.
@@ -216,11 +267,11 @@ La lógica de datos/estado debe separarse de la presentación para que las métr
 
 ## 18. Diseño responsive
 
-Breakpoints de referencia: móvil `<640 px`, tablet `640–1023 px`, escritorio `>=1024 px`; aplicar según espacio real, no solo dispositivo.
+Breakpoints del CSS del prototipo: sidebar persistente desde 1024 px y drawer hasta 1023 px; las métricas pasan de cuatro a dos columnas hasta 800 px y a una columna hasta 520 px. Usar estos umbrales para reproducir el diseño sin decisiones adicionales.
 
-- **Escritorio:** sidebar persistente, tabla completa, métricas en 4 columnas, modales centrados con ancho máximo aproximado 720 px.
-- **Tablet:** sidebar colapsable o drawer, métricas en 2 columnas, tabla permite scroll horizontal limitado con primera columna identificable; modales ocupan hasta 90% del ancho.
-- **Móvil:** navegación drawer; métricas en 1 columna o 2 si el ancho lo permite sin comprimir valores; tablas como listas de filas con etiquetas de campo o scroll horizontal claramente señalado, nunca ocultar acciones/datos esenciales; acciones agrupadas en menú; modales casi a pantalla completa con scroll interno, botones táctiles de al menos 44x44 px.
+- **Escritorio, desde 1024 px:** sidebar persistente, tabla completa, métricas en 4 columnas y modales centrados; ancho máximo 760 px para detalle y 440 px para confirmación.
+- **Tablet, de 521 a 1023 px:** navegación drawer; tabla con scroll horizontal contenido; métricas en 4 columnas por encima de 800 px y en 2 a partir de 800 px hacia abajo; modales centrados con márgenes y scroll interno.
+- **Móvil, hasta 520 px:** navegación drawer; métricas en una columna; tablas con desplazamiento horizontal contenido, sin ocultar acciones ni datos esenciales; modales pegados abajo y de ancho completo con scroll interno; controles táctiles de al menos 44x44 px.
 - Evitar scroll horizontal de toda la página, solapamiento de acciones y texto cortado. Probar como mínimo 360 px, 768 px y 1280 px de ancho.
 
 ## 19. Consideraciones de accesibilidad
@@ -236,7 +287,7 @@ Breakpoints de referencia: móvil `<640 px`, tablet `640–1023 px`, escritorio 
 
 - Datos hardcodeados en módulos/estructuras locales, con relaciones mediante IDs; no `fetch`, XHR, SDK, API, base de datos ni secretos.
 - La interfaz se sirve desde la infraestructura Flask estática existente; no convertir `server.py` en backend de dominio.
-- Mantener tecnologías compatibles con la plantilla; no añadir dependencias de UI sin justificar. Tailwind v4 por CDN es recomendación, no dependencia actualmente presente; aplicar `dark:` si se adopta para cumplir los temas requeridos.
+- Tailwind CSS v4 por el CDN indicado en la sección 5 es obligatorio en las seis páginas; `app.css` local y estilos inline calculados son parte del diseño aprobado. No añadir frameworks, jQuery, dependencias de UI ni herramienta de build.
 - Estado de tema, registros eliminados y resolución viven solo en sesión/memoria local. Recargar restaura fixtures deterministas, salvo preferencia de tema.
 - No incluir datos personales reales, prompts reales ni credenciales. Prompt y stack traces ficticios.
 - Limitar el alcance a navegador moderno y uso administrativo; no declarar seguridad, privacidad o fiabilidad de producción.
@@ -259,23 +310,36 @@ Breakpoints de referencia: móvil `<640 px`, tablet `640–1023 px`, escritorio 
 - Contratos guardan precios snapshot; se usa tarifa de agente más Skills para el periodo contratado, descuento e impuesto explícito. Fixtures deben satisfacer la fórmula.
 - Duración contractual cuenta ambos días, inicio y fin. Contrato activo puede carecer de fecha final.
 - Eliminaciones archivarán registros localmente y conservarán historial; no borran dependencias.
-- No hay búsqueda/paginación requeridas por el briefing. Si el dataset seed cabe en una pantalla desplazable, no añadir controles innecesarios.
+- No implementar búsqueda ni paginación. Los únicos filtros son los dos selectores locales de gravedad y resolución del Log de errores.
 - No se especifica backend existente de AgentHub en el repositorio. La especificación no promete integración.
 
 ## 23. Criterios de aceptación
 
-- Están disponibles las seis secciones mediante navegación consistente y se identifica la sección activa.
-- Dashboard presenta las cuatro métricas con reglas calculables y actividad semanal con estado vacío.
-- Usuarios muestra columnas requeridas; detalle enseña registro completo y cierra por botón/backdrop/Escape; eliminar confirma y simula sin borrar relaciones históricas.
-- Agentes muestran propietario, estado y Skills contraídas inicialmente; expandir/contraer es accesible y animado; Configurar muestra prompt completo; eliminar confirma y actualiza conteos.
-- Skills explica el concepto, presenta catálogo ficticio, cantidad de agentes, detalle y eliminación conservando snapshots.
-- Contratos activos e históricos muestran datos requeridos; detalle incluye duración cuando calculable, Skills/precios y desglose cuya suma coincide con total.
-- Log muestra timestamp, agente, tipo, descripción, gravedad textual/cromática y acciones; detalle muestra stack trace y resolución; resolver actualiza estado derivado sin borrar el log.
-- Menús cierran por clic exterior/Escape/selección; modales gestionan backdrop, foco y cierre; confirmaciones, toast, undo y estados vacíos tienen resultados definidos.
-- Claro y oscuro cubren todos los componentes y usan `dark:` si Tailwind forma parte de la implementación.
-- Diseño funciona en escritorio, tablet y móvil sin ocultar información/acciones esenciales.
-- Fixtures respetan referencias, estados, importes y fechas; las interacciones no requieren red ni sobreviven a recarga, excepto la preferencia de tema si se persiste.
-- Solo se incorporan dependencias si están justificadas y se identifica claramente cuáles son recomendaciones frente a tecnologías existentes.
+1. Las seis secciones se alcanzan desde la sidebar y la vista actual tiene indicador activo.
+2. Dashboard muestra cuatro tarjetas: ingresos del mes, descuentos, agentes activos y agentes fallando; cada una tiene icono, etiqueta y valor calculado desde fixtures locales.
+3. Dashboard incluye debajo un gráfico semanal de siete días con importe, número de pagos, escala coherente y estado vacío.
+4. Usuarios muestra al menos cinco registros con nombre, email, plan, estado y acciones.
+5. El menú de cada usuario incluye detalle y eliminación; el modal corresponde a la fila, muestra el registro completo y se cierra con botón, Escape o backdrop.
+6. Eliminar un usuario requiere confirmación, conserva agentes/contratos/logs relacionados y permite deshacer el soft-delete durante cinco segundos.
+7. Agentes muestra al menos cuatro registros con propietario, estado derivado, Skills y menú de acciones por fila.
+8. Las Skills de cada agente comienzan colapsadas; expandir/contraer actualiza el estado accesible y usa transición que respeta movimiento reducido.
+9. Configurar abre el prompt completo del agente seleccionado en textarea editable; Guardar cambia solo el estado local, rechaza texto vacío y da feedback.
+10. Eliminar agente requiere confirmación, conserva contratos/logs históricos, actualiza conteos y permite deshacer.
+11. Skills muestra al menos cuatro capacidades con descripción y conteo de agentes calculado desde las relaciones.
+12. La sección Skills explica el concepto; cada fila permite detalle y archivo/eliminación confirmada sin modificar precios snapshot de contratos.
+13. Contrataciones muestra al menos cuatro contratos activos e históricos con cliente, agente, Skills, fechas, importe y acciones.
+14. Cada fila de contrato tiene menú `⋮` con «Ver detalle»; el modal correspondiente muestra duración si puede calcularse, cada Skill y su precio.
+15. El desglose contractual muestra base, subtotal, descuento, impuestos y total; el cálculo y los pagos registrados deben coincidir.
+16. Log de errores muestra al menos seis entradas con fecha/hora, agente, tipo, descripción, gravedad y resolución.
+17. Cada log tiene menú `⋮` con detalle y resolución; el detalle muestra contexto y stack trace completos.
+18. Resolver un log actualiza solo ese registro, conserva su traza, registra `resolvedAt` y recalcula el estado del agente; resolver dos veces no duplica cambios.
+19. Los menús se abren con su disparador, solo uno queda abierto, y se cierran por selección, clic exterior, Escape o cambio de sección.
+20. Los modales enfocan el diálogo, contienen el tabulado, cierran por botón/Escape/backdrop y restauran el foco al activador.
+21. Las eliminaciones muestran confirmación contextual; cancelar no cambia datos y Deshacer restaura exactamente el registro y sus conteos.
+22. El toggle de tema alterna claro/oscuro en toda la UI mediante la clase `dark`, variables CSS locales y variantes Tailwind cuando se usen, y conserva la preferencia al navegar entre documentos.
+23. A 360, 768 y 1280 px sidebar, tablas, métricas y modales siguen operables, sin scroll global ni controles esenciales ocultos.
+24. Navegación, botones, tablas, menús, modales y acordeones usan semántica HTML y estados accesibles; los cambios se anuncian y el foco es visible.
+25. Los datos son ficticios y coherentes entre secciones; no hay API, backend de producto, framework, jQuery, paquete de frontend ni herramienta de build. Tailwind se carga por CDN y `app.css` local define la capa visual compartida; Flask es la dependencia Python del servidor de desarrollo existente.
 
 ## 24. Checklist de validación
 
@@ -296,6 +360,7 @@ Breakpoints de referencia: móvil `<640 px`, tablet `640–1023 px`, escritorio 
 
 - No hay backend, autenticación, autorización, persistencia ni datos reales; no es una herramienta operativa para producción.
 - Las modificaciones locales desaparecen al recargar y los datos seed no reflejan actividad real.
-- Tailwind v4 por CDN es una recomendación documentada, no una dependencia detectada; requiere conectividad al CDN. Debe confirmarse en implementación si se acepta ese requisito externo.
+- Tailwind v4 se carga desde CDN y requiere conectividad para disponer de sus utilidades; `app.css` es una hoja local y forma parte del diseño aprobado.
 - No se han definido requisitos de despliegue, navegadores corporativos, localización distinta de español/USD, impuestos, descuentos comerciales reales ni reglas de facturación por ciclo.
 - Los errores y system prompts son demostrativos y no deben incluir información sensible.
+- El servidor Flask es de desarrollo, no debe exponerse como servicio de producción. Las verificaciones visuales de los temas, teclado y anchos 360/768/1280 px siguen pendientes de una revisión real en navegador; no se consideran aprobadas solo por obtener HTTP 200 o por validar la sintaxis.
